@@ -104,7 +104,6 @@
 	(println "Generating index.html")
 	(load-file (str src (pathSep) "template.clj"))
 	(with-open [wrtr (writer (str dst (pathSep) "index.html"))]
-		(println "Writing to index.html")
 		(.write wrtr
 			(apply-template
 				strings

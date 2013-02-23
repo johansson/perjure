@@ -1,0 +1,25 @@
+<html>
+	<head>
+		<title>{site-title} - {blog-title}</title>
+		<meta name="generator" content="perjure {perjure-version}">
+		<link rel="stylesheet" type="text/css" media="all" href="./styles/main.css">
+	</head>
+	<body>
+		<div id="header">
+			<h1>{site-title}</h1>
+			
+			<ul>
+				<li id="home"><a href="{site-home}/{blog-home}">{blog-title}</a></li>
+				<li id="github"><a href="http://github.com/{github-account}">GitHub</a></li>
+			</ul>
+		</div>
+		
+		<div id="content">
+			{content}
+		</div>
+		
+		<div id="footer">
+			<p><a href="{site-home}/{blog-home}">{blog-title}</a> - <a href="http://github.com/{github-account}">GitHub</a></p>
+		</div>
+	</body>
+</html>
