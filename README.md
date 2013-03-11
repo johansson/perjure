@@ -1,6 +1,6 @@
 # perjure
 
-A static blog compiler writtein in Clojure.
+A static blog compiler written in Clojure.
 
 ## Usage
 
