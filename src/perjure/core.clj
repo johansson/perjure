@@ -54,20 +54,12 @@
 (defn generate-post
 	"Generate a post from the Markdown file given."
 	[src dst file]
-	(def html-file (str (first (string/split (last (string/split (.getAbsolutePath file) (pathSepR))) #"\.")) ".html"))
+	(def html-file (html-file-for file))
 	(println (str "Generating " html-file))
 	(def title (first (get-title-and-summary-for-post file)))
 	(load-file (str src (pathSep) "template.clj"))
 	(let [[year month day] (string/split html-file #"-")]
-		(with-open [wrtr
-						(writer
-							(str
-								dst
-								(pathSep)
-								(first (string/split (last (string/split (.getAbsolutePath file) (pathSepR))) #"\."))
-								".html"
-							)
-						)]
+		(with-open [wrtr (writer (str dst (pathSep) html-file))]
 			(.write wrtr
 				(apply-template
 					strings
