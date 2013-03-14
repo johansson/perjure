@@ -1,8 +1,8 @@
 (ns perjure.core
 	(:gen-class :main true)
-	(:use clojure.java.io)
-	(:require [markdown.core :as md])
-	(:require [clojure.string :as string]))
+	(:require [clojure.java.io :as cljio])
+	(:require [clojure.string :as string])
+	(:require [markdown.core :as md]))
 
 ; forward declarations for template.clj dictionaries
 (declare strings)
@@ -24,7 +24,7 @@
 	[hmap]
 	(doseq [[path content] hmap]
 		(try
-			(let [file (clojure.java.io/file path)
+			(let [file (cljio/file path)
 				 parent (.getParentFile file)]
 				(if (.mkdirs parent)
 					(spit file content)
@@ -59,7 +59,7 @@
 	[dir]
 	(filter
 		#(.matches (re-matcher #"^\d{4}-\d{2}-\d{2}-.+?\.[Mm][Dd]$" (.getName %)))
-		(file-seq (clojure.java.io/file dir))))
+		(file-seq (cljio/file dir))))
 
 ; safe
 (defn html-filename-for
