@@ -19,6 +19,19 @@
 (defn err-println [msg]
 	(binding [*out* *err*] (println msg)))
 
+; safe
+(defn get-ymd [filename]
+	(take 3 (string/split filename #"-")))
+	
+; safe
+(defn html-filename-for
+	"Return the string renaming the .md file to .html."
+	[filename ps]
+	(let [	[year month day] (get-ymd filename)
+			md-filename (string/replace filename (str year "-" month "-" day "-") "")
+			bare-filename (string/replace md-filename #"\.[Mm][Dd]$" "")]
+		(str ps year ps month ps day ps bare-filename ".html")))
+
 ; unsafe
 (defn spit-dict-to-html
 	[hmap]
@@ -34,10 +47,6 @@
 			(catch java.io.IOException e
 				(err-println (str "i/o error: " (.getMessage e)))))))
 
-; safe
-(defn get-ymd [filename]
-	(take 3 (string/split filename #"-")))
-
 ; unsafe
 (defn parse-post
 	"Parse the filename, contents, etc. for a Post."
@@ -51,7 +60,8 @@
 					month
 					day
 					(md/md-to-html-string summary)
-					(md/md-to-html-string raw-file))))))
+					(md/md-to-html-string raw-file)
+					(html-filename-for (.getName post) "/"))))))
 
 ; unsafe
 (defn get-posts
@@ -60,15 +70,6 @@
 	(filter
 		#(.matches (re-matcher #"^\d{4}-\d{2}-\d{2}-.+?\.[Mm][Dd]$" (.getName %)))
 		(file-seq (cljio/file dir))))
-
-; safe
-(defn html-filename-for
-	"Return the string renaming the .md file to .html."
-	[filename ps]
-	(let [	[year month day] (get-ymd filename)
-			md-filename (string/replace filename (str year "-" month "-" day "-") "")
-			bare-filename (string/replace md-filename #"\.[Mm][Dd]$" "")]
-		(str ps year ps month ps day ps bare-filename ".html")))
 
 ; safe
 (defn apply-template
@@ -94,8 +95,7 @@
 (defn generate-post
 	"Generate a post from the Markdown file given."
 	[page-template post-template strings k post]
-	(let 	[[title year month day summary post] post
-			url (string/join "-" [year month day])]
+	(let 	[[title year month day summary post url] post]
 		(generate-page page-template strings title
 			(apply-template 
 				(apply
