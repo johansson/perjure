@@ -28,16 +28,11 @@
 				 parent (.getParentFile file)]
 				(if (.mkdirs parent)
 					(spit file content)
-					(err-println (str "error: could not make parent dir: " (.getAbsolutePath parent)))
-				)
-			)
+					(err-println (str "error: could not make parent dir: " (.getAbsolutePath parent)))))
 			(catch SecurityException e
 				(err-println (str "security error: " (.getMessage e))))
 			(catch java.io.IOException e
-				(err-println (str "i/o error: " (.getMessage e))))
-		)
-	)
-)
+				(err-println (str "i/o error: " (.getMessage e)))))))
 
 ; safe
 (defn get-ymd [filename]
