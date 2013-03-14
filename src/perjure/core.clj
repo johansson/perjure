@@ -7,8 +7,8 @@
 ; forward declarations for template.clj dictionaries
 (declare strings)
 (declare files)
-(declare blog-post-keys)
-(declare blog-posts-keys)
+(declare blog-post-keys)	; for blog page
+(declare blog-posts-keys) 	; for index page
 
 (defn isWindows? [] (.contains (System/getProperty "os.name") "Windows"))
 
@@ -16,6 +16,70 @@
 (defn pathSep [] (if isWindows? "\\" "/"))
 (defn pathSepR [] (if isWindows? #"\\" #"/"))
 
+(defn err-println [msg]
+	(binding [*out* *err*] (println msg)))
+
+; unsafe
+(defn spit-dict-to-html
+	[hmap]
+	(doseq [[path content] hmap]
+		(try
+			(let [file (clojure.java.io/file path)
+				 parent (.getParentFile file)]
+				(if (.mkdirs parent)
+					(spit file content)
+					(err-println (str "error: could not make parent dir: " (.getAbsolutePath parent)))
+				)
+			)
+			(catch SecurityException e
+				(err-println (str "security error: " (.getMessage e))))
+			(catch java.io.IOException e
+				(err-println (str "i/o error: " (.getMessage e))))
+		)
+	)
+)
+
+;		(map #(spit % (get hmap %)) (keys hmap)))
+
+; (doseq [[k v] db] (prn k v))
+
+; safe
+(defn get-ymd [filename]
+	(take 3 (string/split filename #"-")))
+
+; unsafe
+(defn parse-post
+	"Parse the filename, contents, etc. for a Post."
+	[post]
+	(let [raw-file (slurp post) [year month day] (get-ymd (.getName post))]
+		(with-open [reader (java.io.BufferedReader. (java.io.StringReader. raw-file))]
+			(let [[title summary] (filter #(not (string/blank? %)) (line-seq reader))]
+				(list
+					(string/trim (string/replace title #"#" ""))
+					year
+					month
+					day
+					(md/md-to-html-string summary)
+					(md/md-to-html-string raw-file))))))
+
+; unsafe
+(defn get-posts
+	"Returns a list of files pointing to the Markdown files in the directory given."
+	[dir]
+	(filter
+		#(.matches (re-matcher #"^\d{4}-\d{2}-\d{2}-.+?\.[Mm][Dd]$" (.getName %)))
+		(file-seq (clojure.java.io/file dir))))
+
+; safe
+(defn html-filename-for
+	"Return the string renaming the .md file to .html."
+	[filename ps]
+	(let [	[year month day] (get-ymd filename)
+			md-filename (string/replace filename (str year "-" month "-" day "-") "")
+			bare-filename (string/replace md-filename #"\.[Mm][Dd]$" "")]
+		(str ps year ps month ps day ps bare-filename ".html")))
+
+; safe
 (defn apply-template
 	"Apply a dictionary (in template.clj or generated), replacing all
 	instances of keys with values in the string template and returns
@@ -24,133 +88,75 @@
 	(reduce
 		(fn [acc m] (apply string/replace acc m))
 		template
-		(map vector (keys hmap) (vals hmap))
-	)
-)
+		(map vector (keys hmap) (vals hmap))))
+			
+; safe
+(defn generate-page
+	[page-template strings title virgin]
+	(string/replace 
+		(apply-template	strings
+			(apply-template (hash-map "{content}" virgin) page-template))
+		"{page-title}"
+		title))
 
-(defn get-title-and-summary-for-post
-	"Return a list with title and summary from a Markdown entry."
-	[post]
-	(binding [*in* (java.io.BufferedReader. (java.io.FileReader. post))]
-		(list (clojure.string/trim (clojure.string/replace (read-line) #"#" "")) (md/md-to-html-string (read-line)))
-	)
-)
-
-(defn get-posts
-	"Returns a list of files pointing to the Markdown files in the directory given."
-	[dir]
-	(filter
-		(fn [file] (.endsWith (.toLowerCase (.getAbsolutePath file)) ".md"))
-		(file-seq (clojure.java.io/file dir))
-	)
-)
-
-(defn html-file-for
-	"Return the string renaming the .md file to .html."
-	[file]
-	(str (first (string/split (last (string/split (.getAbsolutePath file) (pathSepR))) #"\.")) ".html")
-)
-
+; safe
 (defn generate-post
 	"Generate a post from the Markdown file given."
-	[src dst file]
-	(def html-file (html-file-for file))
-	(println (str "Generating " html-file))
-	(def title (first (get-title-and-summary-for-post file)))
-	(load-file (str src (pathSep) "template.clj"))
-	(let [[year month day] (string/split html-file #"-")]
-		(with-open [wrtr (writer (str dst (pathSep) html-file))]
-			(.write wrtr
-				(apply-template
-					strings
-					(apply-template
-						(hash-map
-							"{content}"
-							(apply-template 
-								(apply hash-map
-									(interleave blog-post-keys
-										(list
-											html-file															; url
-											title																; title
-											day																	; day
-											month																; month
-											year																; year
-											(md/md-to-html-string (slurp file))									; blog post
-										)
-									)
-								)
-								(slurp (str src (pathSep) (get files "{blog-post}")))
-							)
-						)
-						(slurp (str src (pathSep) "template.html"))
-					)
-				)
-			)
-		)
-	)
-)
+	[page-template post-template strings k post]
+	(let 	[[title year month day summary post] post
+			url (string/join "-" [year month day])]
+		(generate-page page-template strings title
+			(apply-template 
+				(apply
+					hash-map
+					(interleave k (list url title day month year post)))
+				post-template))))
 
+; safe
+(defn generate-summary-for-index
+	[post-template k url title day month year summary]
+	(apply-template 
+		(apply
+			hash-map
+			(interleave k
+				(list url title day month year summary)))
+		post-template))
+
+; (doseq [[k v] db] (prn k v))
+
+; safe
 (defn generate-index
 	"Generate the index page for the blog."
-	[src dst posts]
-	(println "Generating index.html")
-	(load-file (str src (pathSep) "template.clj"))
-	(with-open [wrtr (writer (str dst (pathSep) "index.html"))]
-		(.write wrtr
-			(apply-template
-				strings
-				(apply-template
-					(hash-map
-						"{content}"
-						(apply
-							str
-							(map
-								(fn [file]
-									(let [[year month day] (string/split (html-file-for file) #"-") [title summary] (get-title-and-summary-for-post file)]
-										(apply-template 
-											(apply
-												hash-map
-												(interleave blog-posts-keys
-													(list
-														(html-file-for file)															; url
-														title											; title
-														day																	; day
-														month																; month
-														year																; year
-														(md/md-to-html-string summary)					; blog post summary
-													)
-												)
-											)
-											(slurp (str src (pathSep) (get files "{blog-posts}")))
-										)
-									)
-								)
-								posts
-							)
-						)
-					)
-					(slurp (str src (pathSep) "template.html"))
-				)
-			)
-		)
-	)
-)
+	[page-template post-template strings k posts]
+	(generate-page page-template strings "Index"
+		(apply str
+			(map
+				#(let [[title year month day summary] (get posts %)]
+					(generate-summary-for-index post-template k % title day month year summary))
+				(keys posts)))))
 
 (defn -main
 	"Perjure - a blogging engine written in Clojure"
 	[& args]
-	(println "Perjure 0.1")
-	(let [[loc src dst] args]							; loc = location of .md files
-		(def posts (get-posts loc))						; src = location of template files
-		(try											; dst = output directory
-			(doall
-				(concat
-					(map (partial generate-post src dst) posts)
-					(list (generate-index src dst posts))
-				)
-			)
-			(catch Exception e (binding [*out* *err*] (println (str "error: " (.getMessage e))) "failure."))
-			(finally (println "Exiting Perjure"))
-		)
-	)
-)
+	(println "Perjure 0.2-beta")
+	(load-file (str (second args) (pathSep) "template.clj"))
+	(let	[[loc src dst] args
+			page-template 		(slurp (str src (pathSep) (get files "page-template")))
+			blog-post-template 	(slurp (str src (pathSep) (get files "blog-post")))
+			blog-posts-template	(slurp (str src (pathSep) (get files "blog-posts")))
+			posts (get-posts loc)
+			parsed-posts (map parse-post posts)
+			paths-for-posts (map #(str dst (html-filename-for (.getName %) (pathSep))) posts)
+			urls-for-posts (map #(html-filename-for (.getName %) "/") posts)]
+			;paths-and-titles-for-posts (apply hash-map paths-for-posts (map #(first %) parsed-posts))
+			; loc = location of .md files ; src = location of template files ; dst = output directory
+		(try
+			(spit-dict-to-html
+					;[page-template post-template strings keys post]
+				(let [generated-post (map (partial generate-post page-template blog-post-template strings blog-post-keys) parsed-posts)]
+					(apply hash-map (interleave paths-for-posts generated-post))))
+			(spit
+				(str dst (pathSep) "index.html") ; (apply hash-map paths-for-posts parsed-posts)
+				(generate-index page-template blog-posts-template strings blog-posts-keys (apply hash-map (interleave urls-for-posts parsed-posts))))
+		(catch Exception e (.printStackTrace e) -1)
+		(finally (println "Exiting Perjure")))))

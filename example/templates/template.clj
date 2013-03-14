@@ -13,8 +13,9 @@
 
 (def files
 	(hash-map
-		"{blog-post}" "blog-post.html",		; point it to your blog post template
-		"{blog-posts}" "blog-posts.html"))	; point it to your index of blog posts template
+		"page-template" "template.html",	; point it to your page template
+		"blog-post" "blog-post.html",		; point it to your blog post template
+		"blog-posts" "blog-posts.html"))	; point it to your index of blog posts template
 
 ; Do not edit below this.
 (def blog-post-keys
