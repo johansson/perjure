@@ -39,10 +39,6 @@
 	)
 )
 
-;		(map #(spit % (get hmap %)) (keys hmap)))
-
-; (doseq [[k v] db] (prn k v))
-
 ; safe
 (defn get-ymd [filename]
 	(take 3 (string/split filename #"-")))
@@ -122,8 +118,6 @@
 				(list url title day month year summary)))
 		post-template))
 
-; (doseq [[k v] db] (prn k v))
-
 ; safe
 (defn generate-index
 	"Generate the index page for the blog."
@@ -140,7 +134,7 @@
 	[& args]
 	(println "Perjure 0.2-beta")
 	(load-file (str (second args) (pathSep) "template.clj"))
-	(let	[[loc src dst] args
+	(let	[[loc src dst] args ; loc = location of .md files ; src = location of template files ; dst = output directory
 			page-template 		(slurp (str src (pathSep) (get files "page-template")))
 			blog-post-template 	(slurp (str src (pathSep) (get files "blog-post")))
 			blog-posts-template	(slurp (str src (pathSep) (get files "blog-posts")))
@@ -148,15 +142,12 @@
 			parsed-posts (map parse-post posts)
 			paths-for-posts (map #(str dst (html-filename-for (.getName %) (pathSep))) posts)
 			urls-for-posts (map #(html-filename-for (.getName %) "/") posts)]
-			;paths-and-titles-for-posts (apply hash-map paths-for-posts (map #(first %) parsed-posts))
-			; loc = location of .md files ; src = location of template files ; dst = output directory
 		(try
 			(spit-dict-to-html
-					;[page-template post-template strings keys post]
 				(let [generated-post (map (partial generate-post page-template blog-post-template strings blog-post-keys) parsed-posts)]
 					(apply hash-map (interleave paths-for-posts generated-post))))
 			(spit
-				(str dst (pathSep) "index.html") ; (apply hash-map paths-for-posts parsed-posts)
+				(str dst (pathSep) "index.html")
 				(generate-index page-template blog-posts-template strings blog-posts-keys (apply hash-map (interleave urls-for-posts parsed-posts))))
 		(catch Exception e (.printStackTrace e) -1)
 		(finally (println "Exiting Perjure")))))
