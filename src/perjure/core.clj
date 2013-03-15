@@ -127,7 +127,7 @@
 (defn -main
 	"Perjure - a blogging engine written in Clojure"
 	[& args]
-	(println "Perjure 0.2-beta")
+	(println "Perjure 0.2")
 	(load-file (str (second args) (pathSep) "template.clj"))
 	(let	[[loc src dst] args ; loc = location of .md files ; src = location of template files ; dst = output directory
 			page-template 		(slurp (str src (pathSep) (get files "page-template")))

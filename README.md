@@ -4,7 +4,7 @@ A static blog compiler written in Clojure.
 
 ## Usage
 
-> `java -jar perjure-0.1.0-SNAPSHOT-standalone.jar /path/to/posts /path/to/templates /path/to/output`
+> `java -jar perjure-0.2.0-standalone.jar /path/to/posts /path/to/templates /path/to/output`
 
 ## Blog structure
 
@@ -32,20 +32,36 @@ By default they are:
 - `blog-posts.html`, which is the index page template.
 - `blog-post.html`, which is the blog post page template.
 
-`template.html` is required. The others may be named whatever
-you like, but you must remap it in `template.clj`, under the
-files dictionary.
+They may be named whatever you like, but you must remap it in
+`template.clj`, under the files dictionary.
 
 ## Blog entry formatting
 
-`perjure` is unfortunately a bit inflexible about the markdown
-files for a reason. `perjure` generates the blog entry title
-and summary from the first two lines. The first line is the
-title. The second line is the summary. I plan to change this
-and make it more flexible. This is a first release, after all. :)
+`perjure` is now more flexible about the extracting blog post
+metadata from the Markdown files. Instead of first two lines
+(blank or non-blank, which might have been a problem for some
+users), it will read the file and get the first non-blank line
+and use that for the title, then use the second non-blank line
+for the summary.
 
-Also, I don't generate the directory structure right now. That's
-for 0.1.1. Sorry. :(
+Now it supports directory structuring. However, it's very strict
+about that, so the only current supported directory structure is
+`${BLOG-HOME}/YYYY/mm/dd/`. But the cool thing is that `perjure`
+doesn't care where you put the Markdown files in the posts
+directory you pass as an argument to it. It just cares about the
+file names, so beware of duplicate file names! I designed this way
+so the user can organize his blog as logically as he wants it.
+Perhaps the user thinks it's best to structure it as:
+
+> `/path/to/posts/computers`
+
+> `/path/to/posts/family`
+
+> `/path/to/posts/unlabeled/2012`
+
+Whatever the reasoning, all that matters is that you follow the
+basic rule of file naming. Then it does not matter where the .md
+files are, as long as they are somewhere in the posts directory.
 
 ## License
 

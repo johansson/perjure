@@ -1,4 +1,4 @@
-(defproject perjure "0.1.0-SNAPSHOT"
+(defproject perjure "0.2.0"
   :description "perjure is a static blog compiler writtein in Clojure"
   :url "http://github.com/johansson/perjure"
   :license {:name "GNU Lesser General Public License"
