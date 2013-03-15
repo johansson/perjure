@@ -30,7 +30,7 @@
 	(let [	[year month day] (get-ymd filename)
 			md-filename (string/replace filename (str year "-" month "-" day "-") "")
 			bare-filename (string/replace md-filename #"\.[Mm][Dd]$" "")]
-		(str ps year ps month ps day ps bare-filename ".html")))
+		(str year ps month ps day ps bare-filename ".html")))
 
 ; unsafe
 (defn spit-dict-to-html
@@ -135,7 +135,7 @@
 			blog-posts-template	(slurp (str src (pathSep) (get files "blog-posts")))
 			posts (get-posts loc)
 			parsed-posts (map parse-post posts)
-			paths-for-posts (map #(str dst (html-filename-for (.getName %) (pathSep))) posts)
+			paths-for-posts (map #(str dst (pathSep) (html-filename-for (.getName %) (pathSep))) posts)
 			urls-for-posts (map #(html-filename-for (.getName %) "/") posts)]
 		(try
 			(spit-dict-to-html
