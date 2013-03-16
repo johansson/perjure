@@ -5,9 +5,9 @@
 	(hash-map
 		"{site-home}" "http://tempuri.org",	; change to your URL
 		"{site-title}" "Temporary Site",	; what do you want to call your site?
-		"{blog-title}" "Blog"				; what do you want to call your blog?
-		"{blog-home}" "blog"				; where does blog reside? if at root, use ""
-		"{perjure-version}" "0.1"
+		"{blog-title}" "Blog",				; what do you want to call your blog?
+		"{blog-home}" "blog",				; where does blog reside? if at root, use ""
+		"{perjure-version}" "0.2",
 		"{github-account}" "your-github-account")
 )
 
