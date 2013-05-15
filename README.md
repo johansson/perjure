@@ -19,7 +19,7 @@ generate anything for you!
 
 Your template directory shall contain a Clojure file, named
 `template.clj`. This contains the dictionaries for the
-templated variables. You mad add any variable to strings
+templated variables. You may add any variable to strings
 in the format of `{variable-name}` and map it to a Clojure
 function that returns a string, and put it anywhere in the
 HTML template files. However, the blog post and blog posts keys
