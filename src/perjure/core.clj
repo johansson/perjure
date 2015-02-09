@@ -13,8 +13,8 @@
 (defn isWindows? [] (.contains (System/getProperty "os.name") "Windows"))
 
 ; do they need to be functions or can they be defined as is
-(defn pathSep [] (if isWindows? "\\" "/"))
-(defn pathSepR [] (if isWindows? #"\\" #"/"))
+(defn pathSep [] (if (isWindows?) "\\" "/"))
+(defn pathSepR [] (if (isWindows?) #"\\" #"/"))
 
 (defn err-println [msg]
 	(binding [*out* *err*] (println msg)))
